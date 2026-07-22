@@ -29,8 +29,26 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/students", (req: Request, res: Response) => {
   try {
     const program = req.query.program;
-
-    if (program) {
+    const studentId = req.query.studentId
+    if (program && studentId) {
+      let filtered_students = students.filter(
+        (student) => student.program === program && student.studentId === studentId
+      );
+      return res.json({
+        success: true,
+        data: filtered_students,
+      });
+    }
+     else if (studentId) {
+      let filtered_students = students.filter(
+        (student) => student.studentId === studentId
+      );
+      return res.json({
+        success: true,
+        data: filtered_students,
+      });
+    }
+    else if (program) {
       let filtered_students = students.filter(
         (student) => student.program === program
       );
@@ -150,12 +168,47 @@ app.put("/students", (req: Request, res: Response) => {
 
 // DELETE /students, body = {studentId}
 app.delete("/students", (req: Request, res: Response) => {
-  res.json({
-    message: "Implement this!"
+  try{
+  const body = req.body as Student;
+  const result = zStudentDeleteBody.safeParse(body);
+  const foundIndex = students.findIndex(
+      (student) => student.studentId === body.studentId
+    );
+  if(!result.success)
+    return res.json({
+    ok: false,
+    message: "Studen Id must contain 9 characters"
   })
+  if (foundIndex === -1) {
+      return res.json({
+        ok: false,
+        message: "Student does not exists",
+      });
+    }
+    students.splice(foundIndex, 1);
+    return res.json({
+        ok: true,
+        message: `Student Id ${body.studentId} has been deleted`,
+      });
+    }catch(err){
+        return res.json({
+        ok: false,
+        message: "Somthing is wrong, please try again",
+      error: err,
+    });
+    }
 });
 
 // GET /api/me
+app.get("/api/me", (req: Request, res: Response) => {
+    return res.json({
+        ok:true,
+        fullName:"winatthapon Jansuk",
+        studentId:"680610716"
+      });
+})
+
+
 
 app.listen(port, async () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
